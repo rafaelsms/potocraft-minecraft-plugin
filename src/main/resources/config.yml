@@ -1,0 +1,6 @@
+sql:
+  user: 'user'
+  password: 'password'
+  jdbcUrl: 'jdbc:mariadb://127.0.0.1:3306/blockprotection?useSSL=false'
+  driverClassName: 'org.mariadb.jdbc.Driver'
+  poolSize: 10

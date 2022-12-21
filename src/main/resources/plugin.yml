@@ -1,0 +1,10 @@
+name: PotoCraft
+version: 0.1
+main: com.rafaelsms.potocraft.PotoCraftPlugin
+load: STARTUP
+api-version: 1.19
+commands:
+  allow:
+    aliases: [ disallow ]
+    description: Allow or disallow another player to place and break blocks nearby.
+    usage: /allow [name]

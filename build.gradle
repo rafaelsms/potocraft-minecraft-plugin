@@ -1,0 +1,32 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'java'
+}
+
+group 'com.rafaelsms.potocraft'
+version '0.1'
+
+repositories {
+    mavenCentral()
+    // Purpur
+    maven {
+        url('https://repo.purpurmc.org/snapshots/')
+    }
+}
+
+dependencies {
+    compileOnly('org.purpurmc.purpur:purpur-api:1.19.3-R0.1-SNAPSHOT')
+    implementation('com.zaxxer:HikariCP:5.0.1')
+    implementation('org.mariadb.jdbc:mariadb-java-client:2.1.2')
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+shadowJar {
+    relocate('com.zaxxer', 'potocraft.com.zaxxer')
+    minimize {
+        exclude(dependency('org.mariadb.jdbc:.*:.*'))
+    }
+}
