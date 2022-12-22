@@ -1,8 +1,11 @@
 package com.rafaelsms.potocraft;
 
 import com.rafaelsms.potocraft.commands.AllowCommand;
+import com.rafaelsms.potocraft.commands.AllowListCommand;
+import com.rafaelsms.potocraft.commands.DisallowCommand;
 import com.rafaelsms.potocraft.listeners.BlocksListener;
 import com.rafaelsms.potocraft.listeners.WorldsListener;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.Listener;
@@ -39,7 +42,10 @@ public class PotoCraftPlugin extends JavaPlugin {
 
         registerEvent(new WorldsListener(this));
         registerEvent(new BlocksListener(this));
+
         registerCommand("allow", new AllowCommand(this));
+        registerCommand("allowed", new AllowListCommand(this));
+        registerCommand("disallow", new DisallowCommand(this));
 
         getLogger().info("Enabled PotoCraft Plugin.");
     }
@@ -81,5 +87,14 @@ public class PotoCraftPlugin extends JavaPlugin {
             throw new IllegalStateException("Attempted to register unknown command: %s".formatted(command));
         }
         pluginCommand.setExecutor(commandExecutor);
+    }
+
+    public OfflinePlayer searchOfflinePlayer(String playerName) {
+        OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(playerName);
+        if (offlinePlayer.hasPlayedBefore()) {
+            return offlinePlayer;
+        }
+
+        return null;
     }
 }

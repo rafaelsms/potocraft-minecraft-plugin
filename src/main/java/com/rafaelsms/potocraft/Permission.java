@@ -4,7 +4,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public enum Permission {
 
-    OVERRIDE_PROTECTION("potocraft.override_protection");
+    OVERRIDE_PROTECTION("potocraft.override_protection"),
+    ALLOW_PLAYER("potocraft.commands.allow"),
+    ALLOW_PLAYER_OTHER("potocraft.commands.allow.other"),
+    DISALLOW_PLAYER("potocraft.commands.disallow"),
+    DISALLOW_PLAYER_OTHER("potocraft.commands.disallow.other"),
+    LIST_PLAYERS_ALLOWED("potocraft.commands.list"),
+    LIST_PLAYERS_ALLOWED_OTHER("potocraft.commands.list.other");
 
     private final org.bukkit.permissions.Permission permission;
 
