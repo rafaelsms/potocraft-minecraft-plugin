@@ -94,13 +94,13 @@ public class PlayerDatabase {
 
     public boolean addAllowedPlayer(UUID user, UUID allowedPlayer) throws ExecutionException {
         return pool.executeFuture(connection -> {
-            return setAllowedPlayer(connection, ADD_ALLOWED_PLAYER, user, allowedPlayer);
+            return setAllowedPlayer(connection, OperationType.ADD_PLAYER, user, allowedPlayer);
         });
     }
 
     public boolean removeAllowedPlayer(UUID user, UUID allowedPlayer) throws ExecutionException {
         return pool.executeFuture(connection -> {
-            return setAllowedPlayer(connection, REMOVE_ALLOWED_PLAYER, user, allowedPlayer);
+            return setAllowedPlayer(connection, OperationType.REMOVE_PLAYER, user, allowedPlayer);
         });
     }
 
@@ -117,21 +117,40 @@ public class PlayerDatabase {
         }
     }
 
-    private boolean setAllowedPlayer(Connection connection, String query, UUID user, UUID allowedPlayer) throws SQLException {
+    private boolean setAllowedPlayer(Connection connection, OperationType operationType, UUID user, UUID allowedPlayer) throws SQLException {
         try {
             connection.setAutoCommit(false);
 
-            if (isPlayerAllowed(connection, user, allowedPlayer)) {
+            boolean playerAllowed = isPlayerAllowed(connection, user, allowedPlayer);
+            if (OperationType.ADD_PLAYER == operationType && playerAllowed) {
+                return false;
+            } else if (operationType == OperationType.REMOVE_PLAYER && !playerAllowed) {
                 return false;
             }
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(operationType.getQuery())) {
                 preparedStatement.setString(1, user.toString());
                 preparedStatement.setString(2, allowedPlayer.toString());
                 return preparedStatement.executeUpdate() > 0;
             }
         } finally {
             connection.setAutoCommit(true);
+        }
+    }
+
+    private enum OperationType {
+
+        ADD_PLAYER(ADD_ALLOWED_PLAYER),
+        REMOVE_PLAYER(REMOVE_ALLOWED_PLAYER);
+
+        private final String query;
+
+        OperationType(String query) {
+            this.query = query;
+        }
+
+        public String getQuery() {
+            return query;
         }
     }
 }
