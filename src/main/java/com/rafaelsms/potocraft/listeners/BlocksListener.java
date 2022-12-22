@@ -114,8 +114,18 @@ public class BlocksListener implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    private void onBlockExplodeAttempt(BlockExplodeEvent event) {
+        // Ignore explosions (do not destroy blocks)
+        event.blockList().clear();
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     private void onBlockExplode(BlockExplodeEvent event) {
+        if (event.blockList().isEmpty()) {
+            return;
+        }
+
         try {
             plugin.getBlockDatabase().removeBlocks(mapToLocations(event.blockList()));
         } catch (ExecutionException e) {
