@@ -226,6 +226,11 @@ public class BlocksListener implements Listener {
             return;
         }
 
+        // Skip check if has override permission
+        if (event.getPlayer().hasPermission(Permission.OVERRIDE_PROTECTION.getPermission())) {
+            return;
+        }
+
         if (block.getState() instanceof InventoryHolder) {
             Player player = event.getPlayer();
             try {
