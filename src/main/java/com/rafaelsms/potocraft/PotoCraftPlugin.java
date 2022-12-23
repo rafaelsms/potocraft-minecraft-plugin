@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 
 public class PotoCraftPlugin extends JavaPlugin {
 
+    private Configuration configuration;
     private DatabasePool databasePool;
 
     private PlayerDatabase playerDatabase;
@@ -27,8 +28,8 @@ public class PotoCraftPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         Permission.registerPermissions(this);
-        Configuration configuration = new Configuration(this);
 
+        this.configuration = new Configuration(this);
         this.databasePool = new DatabasePool(configuration, getSLF4JLogger());
 
         try {
@@ -44,7 +45,7 @@ public class PotoCraftPlugin extends JavaPlugin {
         registerEvent(new BlocksListener(this));
 
         registerCommand("allow", new AllowCommand(this));
-        registerCommand("allowed", new AllowListCommand(this));
+        registerCommand("allowlist", new AllowListCommand(this));
         registerCommand("disallow", new DisallowCommand(this));
 
         getLogger().info("Enabled PotoCraft Plugin.");
@@ -63,6 +64,10 @@ public class PotoCraftPlugin extends JavaPlugin {
 
     public Logger logger() {
         return getSLF4JLogger();
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
     }
 
     public PlayerDatabase getPlayerDatabase() {

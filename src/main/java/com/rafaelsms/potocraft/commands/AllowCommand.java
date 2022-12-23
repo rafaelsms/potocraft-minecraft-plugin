@@ -48,7 +48,8 @@ public class AllowCommand implements CommandExecutor {
             allowPlayer(sender, allowingPlayer.getUniqueId(), args[1]);
             return true;
         } else {
-            return false;
+            sender.sendMessage(plugin.getMessages().getAllowCommandHelp());
+            return true;
         }
     }
 

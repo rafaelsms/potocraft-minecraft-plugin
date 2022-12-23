@@ -48,7 +48,8 @@ public class AllowListCommand implements CommandExecutor {
             showPlayerList(sender, offlinePlayer.getUniqueId());
             return true;
         } else {
-            return false;
+            sender.sendMessage(plugin.getMessages().getAllowListCommandHelp());
+            return true;
         }
     }
 

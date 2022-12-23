@@ -33,6 +33,8 @@ import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -46,10 +48,29 @@ public class BlocksListener implements Listener {
     private static final Set<Material> INVALID_PISTON_MATERIALS =
         Set.of(Material.PISTON, Material.PISTON_HEAD, Material.MOVING_PISTON, Material.STICKY_PISTON);
 
+    private final Set<Material> protectedMaterials;
     private final PotoCraftPlugin plugin;
 
     public BlocksListener(PotoCraftPlugin plugin) {
         this.plugin = plugin;
+
+        List<String> materialList = plugin.getConfiguration().getProtectedMaterialList();
+        Set<Material> materialSet = new HashSet<>();
+        for (String materialName : materialList) {
+            try {
+                Material material = Material.valueOf(materialName.toUpperCase());
+
+                if (material.hasGravity()) {
+                    plugin.logger().warn("Ignoring protected material as it has gravity: {}", material.name());
+                    continue;
+                }
+
+                materialSet.add(material);
+            } catch (IllegalArgumentException e) {
+                plugin.logger().warn("Failed to parse protected material name: {}", materialName);
+            }
+        }
+        this.protectedMaterials = Collections.unmodifiableSet(materialSet);
     }
 
     private enum AttemptType {
@@ -143,6 +164,12 @@ public class BlocksListener implements Listener {
         // Do not allow unsafe blocks to be placed
         if (event.getPlayer().hasPermission(Permission.OVERRIDE_PROTECTION.getPermission())) {
             event.getPlayer().sendActionBar(plugin.getMessages().getUnsafePermissionSet());
+            return;
+        }
+
+        // Skip unprotected materials
+        Material material = event.getBlockPlaced().getType();
+        if (!protectedMaterials.contains(material)) {
             return;
         }
 

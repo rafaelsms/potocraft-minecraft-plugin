@@ -5,12 +5,11 @@ load: STARTUP
 api-version: 1.19
 commands:
   allow:
+    aliases: [ permitir ]
     description: Allow another player to place and break blocks nearby.
-    usage: /allow (name)
-  allowed:
-    aliases: [ allowlist ]
+  allowlist:
+    aliases: [ allowed, permitidos ]
     description: Lists which players can place and break blocks nearby.
-    usage: /allowed
   disallow:
+    aliases: [ proibir ]
     description: Disallow another player from place and break blocks nearby.
-    usage: /disallow (name)

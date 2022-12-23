@@ -61,7 +61,8 @@ public class DisallowCommand implements CommandExecutor {
             disallowPlayer(sender, disallowingPlayer.getUniqueId(), args[1]);
             return true;
         } else {
-            return false;
+            sender.sendMessage(plugin.getMessages().getDisallowCommandHelp());
+            return true;
         }
     }
 

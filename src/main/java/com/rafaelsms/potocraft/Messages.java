@@ -85,6 +85,18 @@ public class Messages {
         return parse("<red>Falha ao acessar banco de dados!");
     }
 
+    public Component getAllowCommandHelp() {
+        return parse("<gold>Para permitir que pessoas quebrem/coloquem blocos juntos ao seus: <yellow>/allow (nome)");
+    }
+
+    public Component getAllowListCommandHelp() {
+        return parse("<gold>Para listar que pessoas podem quebrar/colocar blocos juntos ao seus: <yellow>/allowlist");
+    }
+
+    public Component getDisallowCommandHelp() {
+        return parse("<gold>Para proibir que pessoas quebrem/coloquem blocos juntos ao seus: <yellow>/disallow (nome)");
+    }
+
     private static <T> T getOr(T t, T fallback) {
         return Objects.requireNonNullElse(t, fallback);
     }

@@ -3,6 +3,7 @@ package com.rafaelsms.potocraft;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.List;
 import java.util.Objects;
 
 public class Configuration {
@@ -39,5 +40,10 @@ public class Configuration {
 
     public int getSQLPoolSize() {
         return (int) Objects.requireNonNull(configuration.get("sql.poolSize"));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getProtectedMaterialList() {
+        return (List<String>) Objects.requireNonNull(configuration.getList("protection.protected_blocks"));
     }
 }
