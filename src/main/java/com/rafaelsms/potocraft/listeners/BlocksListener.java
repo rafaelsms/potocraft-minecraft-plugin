@@ -30,6 +30,7 @@ import org.bukkit.event.player.PlayerBucketEntityEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.PortalCreateEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
@@ -48,21 +49,22 @@ public class BlocksListener implements Listener {
     private static final Set<Material> INVALID_PISTON_MATERIALS =
         Set.of(Material.PISTON, Material.PISTON_HEAD, Material.MOVING_PISTON, Material.STICKY_PISTON);
 
-    private final Set<UUID> enabledWorldIds;
+    private final Set<UUID> enabledWorldIds = new HashSet<>();
+    private final Set<String> enabledWorldNames = new HashSet<>();
     private final Set<Material> protectedMaterials;
     private final PotoCraftPlugin plugin;
 
     public BlocksListener(PotoCraftPlugin plugin) {
         this.plugin = plugin;
 
-        List<String> worldNameList = plugin.getConfiguration().getProtectedWorldList().stream().map(String::toLowerCase).toList();
-        Set<UUID> worldIdSet = new HashSet<>();
+        // Prepare world name list
+        this.enabledWorldNames.addAll(
+            plugin.getConfiguration().getProtectedWorldList().stream().map(String::toLowerCase).toList());
+
+        // Handle loaded worlds
         for (World world : plugin.getServer().getWorlds()) {
-            if (worldNameList.contains(world.getName().toLowerCase())) {
-                worldIdSet.add(world.getUID());
-            }
+            handleLoadedWorld(world);
         }
-        this.enabledWorldIds = Collections.unmodifiableSet(worldIdSet);
 
         List<String> materialList = plugin.getConfiguration().getProtectedMaterialList();
         Set<Material> materialSet = new HashSet<>();
@@ -81,6 +83,18 @@ public class BlocksListener implements Listener {
             }
         }
         this.protectedMaterials = Collections.unmodifiableSet(materialSet);
+    }
+
+    @EventHandler
+    private void onWorldLoad(WorldLoadEvent event) {
+        handleLoadedWorld(event.getWorld());
+    }
+
+    private void handleLoadedWorld(World world) {
+        if (enabledWorldNames.contains(world.getName().toLowerCase())) {
+            this.enabledWorldIds.add(world.getUID());
+            plugin.logger().info("Protecting world {} (id = {})", world.getName(), world.getUID());
+        }
     }
 
     private enum AttemptType {
