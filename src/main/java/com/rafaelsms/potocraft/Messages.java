@@ -97,6 +97,18 @@ public class Messages {
         return parse("<gold>Para proibir que pessoas quebrem/coloquem blocos juntos ao seus: <yellow>/disallow (nome)");
     }
 
+    public Component getUnsafeCombatMessage() {
+        return parse("<dark_red>Você está em combate! <red>Perderá os itens se morrer ou sair!");
+    }
+
+    public Component getDefaultCombatMessage() {
+        return parse("<red>Você está em combate! Perderá experiência se morrer ou sair!");
+    }
+
+    public Component getSafeCombatMessage() {
+        return parse("<red>Você está em combate!");
+    }
+
     private static <T> T getOr(T t, T fallback) {
         return Objects.requireNonNullElse(t, fallback);
     }

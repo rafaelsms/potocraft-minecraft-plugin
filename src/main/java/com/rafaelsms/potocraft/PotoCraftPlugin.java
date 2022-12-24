@@ -7,10 +7,12 @@ import com.rafaelsms.potocraft.databases.BlockDatabase;
 import com.rafaelsms.potocraft.databases.DatabasePool;
 import com.rafaelsms.potocraft.databases.PlayerDatabase;
 import com.rafaelsms.potocraft.listeners.BlocksListener;
+import com.rafaelsms.potocraft.listeners.CombatListener;
 import com.rafaelsms.potocraft.listeners.WorldsListener;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
@@ -46,6 +48,7 @@ public class PotoCraftPlugin extends JavaPlugin {
 
         registerEvent(new WorldsListener(this));
         registerEvent(new BlocksListener(this));
+        registerEvent(new CombatListener(this));
 
         registerCommand("allow", new AllowCommand(this));
         registerCommand("allowlist", new AllowListCommand(this));
@@ -56,6 +59,9 @@ public class PotoCraftPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // Stop listeners from this plugin
+        HandlerList.unregisterAll(this);
+
         try {
             this.databasePool.close();
         } catch (IOException e) {
