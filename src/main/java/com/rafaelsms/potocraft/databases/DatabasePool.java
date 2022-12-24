@@ -1,5 +1,6 @@
-package com.rafaelsms.potocraft;
+package com.rafaelsms.potocraft.databases;
 
+import com.rafaelsms.potocraft.Configuration;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;

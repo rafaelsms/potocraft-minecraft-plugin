@@ -1,5 +1,6 @@
-package com.rafaelsms.potocraft;
+package com.rafaelsms.potocraft.databases;
 
+import com.rafaelsms.potocraft.Configuration;
 import org.bukkit.Location;
 
 import java.sql.Connection;

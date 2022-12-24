@@ -1,4 +1,4 @@
-package com.rafaelsms.potocraft;
+package com.rafaelsms.potocraft.databases;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
