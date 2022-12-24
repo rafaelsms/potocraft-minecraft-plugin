@@ -45,10 +45,10 @@ public class DatabasePool implements Closeable {
     public void close() throws IOException {
         try {
             getLogger().info("Shutting down executor pool...");
+            this.executor.shutdown();
             if (!this.executor.awaitTermination(1, TimeUnit.MINUTES)) {
-                getLogger().info(
-                    "Timeout on executor shutdown elapsed... Ignoring executing tasks and shutting down anyway.");
-                this.executor.shutdown();
+                getLogger().info("Timeout on executor shutdown elapsed... Ignoring executing tasks and shutting down anyway.");
+                this.executor.shutdownNow();
             }
             getLogger().info("Shutting down database pool...");
             this.dataSource.close();
