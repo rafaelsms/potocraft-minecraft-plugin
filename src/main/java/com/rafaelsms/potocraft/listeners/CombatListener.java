@@ -111,6 +111,7 @@ public class CombatListener implements Listener {
         if (blockedCommands.contains(command)) {
             event.getPlayer().sendMessage(plugin.getMessages().getCommandCombatMessage());
             event.setCancelled(true);
+            plugin.logger().info("Blocked command on combat: {}", command);
             return;
         }
 
@@ -125,6 +126,7 @@ public class CombatListener implements Listener {
             if (alias.equalsIgnoreCase(command)) {
                 event.getPlayer().sendMessage(plugin.getMessages().getCommandCombatMessage());
                 event.setCancelled(true);
+                plugin.logger().info("Blocked command on combat: {} (alias of {})", alias, pluginCommand.getName());
                 return;
             }
         }
