@@ -5,6 +5,8 @@ sql:
   driverClassName: 'org.mariadb.jdbc.Driver'
   poolSize: 10
 protection:
+  protected_worlds:
+    - world
   protected_blocks:
     - OAK_LOG
     - OAK_WOOD

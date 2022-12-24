@@ -48,11 +48,21 @@ public class BlocksListener implements Listener {
     private static final Set<Material> INVALID_PISTON_MATERIALS =
         Set.of(Material.PISTON, Material.PISTON_HEAD, Material.MOVING_PISTON, Material.STICKY_PISTON);
 
+    private final Set<UUID> enabledWorldIds;
     private final Set<Material> protectedMaterials;
     private final PotoCraftPlugin plugin;
 
     public BlocksListener(PotoCraftPlugin plugin) {
         this.plugin = plugin;
+
+        List<String> worldNameList = plugin.getConfiguration().getProtectedWorldList().stream().map(String::toLowerCase).toList();
+        Set<UUID> worldIdSet = new HashSet<>();
+        for (World world : plugin.getServer().getWorlds()) {
+            if (worldNameList.contains(world.getName().toLowerCase())) {
+                worldIdSet.add(world.getUID());
+            }
+        }
+        this.enabledWorldIds = Collections.unmodifiableSet(worldIdSet);
 
         List<String> materialList = plugin.getConfiguration().getProtectedMaterialList();
         Set<Material> materialSet = new HashSet<>();
@@ -81,6 +91,11 @@ public class BlocksListener implements Listener {
 
     private void handleBlockAttempt(Player player, Location location, Cancellable cancellable,
         AttemptType attemptType) {
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(location.getWorld().getUID())) {
+            return;
+        }
+
         // Check if player can bypass protection
         if (player != null && player.hasPermission(Permission.OVERRIDE_PROTECTION.getPermission())) {
             return;
@@ -127,10 +142,30 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     private void onBlockBreak(BlockBreakEvent event) {
+        // Skip if world is not protected
+        Location location = event.getBlock().getLocation();
+        if (!enabledWorldIds.contains(location.getWorld().getUID())) {
+            return;
+        }
+
+        try {
+            plugin.getBlockDatabase().removeBlock(location);
+        } catch (ExecutionException e) {
+            event.getPlayer().sendActionBar(plugin.getMessages().getDatabaseAccessError());
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    private void onBlockBurn(BlockBurnEvent event) {
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(event.getBlock().getWorld().getUID())) {
+            return;
+        }
+
         try {
             plugin.getBlockDatabase().removeBlock(event.getBlock().getLocation());
         } catch (ExecutionException e) {
-            event.getPlayer().sendActionBar(plugin.getMessages().getDatabaseAccessError());
             event.setCancelled(true);
         }
     }
@@ -143,6 +178,11 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     private void onBlockExplode(BlockExplodeEvent event) {
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(event.getBlock().getWorld().getUID())) {
+            return;
+        }
+
         if (event.blockList().isEmpty()) {
             return;
         }
@@ -161,6 +201,11 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     private void onBlockPlace(BlockPlaceEvent event) {
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(event.getBlockPlaced().getWorld().getUID())) {
+            return;
+        }
+
         // Do not allow unsafe blocks to be placed
         if (event.getPlayer().hasPermission(Permission.OVERRIDE_PROTECTION.getPermission())) {
             event.getPlayer().sendActionBar(plugin.getMessages().getUnsafePermissionSet());
@@ -223,15 +268,6 @@ public class BlocksListener implements Listener {
         handleBlockAttempt(null, event.getBlock().getLocation(), event, AttemptType.NATURAL);
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    private void onBlockBurn(BlockBurnEvent event) {
-        try {
-            plugin.getBlockDatabase().removeBlock(event.getBlock().getLocation());
-        } catch (ExecutionException e) {
-            event.setCancelled(true);
-        }
-    }
-
     @EventHandler(ignoreCancelled = true)
     private void onFireSpread(BlockSpreadEvent event) {
         if (event.getSource().getType() != Material.FIRE) {
@@ -263,7 +299,12 @@ public class BlocksListener implements Listener {
             return;
         }
 
-        // Skip check if has override permission
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(block.getWorld().getUID())) {
+            return;
+        }
+
+        // Skip check if player has override permission
         if (event.getPlayer().hasPermission(Permission.OVERRIDE_PROTECTION.getPermission())) {
             return;
         }
@@ -305,7 +346,7 @@ public class BlocksListener implements Listener {
             player = null;
         }
 
-        handleBlockAttempt(player, location, event, AttemptType.READ);
+        handleBlockAttempt(player, location, event, AttemptType.WRITE);
     }
 
     private static Location getAverageLocation(List<BlockState> blocks) {
@@ -337,6 +378,11 @@ public class BlocksListener implements Listener {
             return;
         }
 
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(event.getBlock().getWorld().getUID())) {
+            return;
+        }
+
         Player player;
         if (event.getEntity() instanceof Player player_) {
             player = player_;
@@ -354,6 +400,11 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     private void onPistonRetractAttempt(BlockPistonRetractEvent event) {
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(event.getBlock().getWorld().getUID())) {
+            return;
+        }
+
         if (containsInvalidPistonBlocks(event.getBlocks())) {
             event.getBlock().breakNaturally(true);
             event.setCancelled(true);
@@ -362,6 +413,11 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     private void onPistonExtendAttempt(BlockPistonExtendEvent event) {
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(event.getBlock().getWorld().getUID())) {
+            return;
+        }
+
         if (containsInvalidPistonBlocks(event.getBlocks())) {
             event.getBlock().breakNaturally(true);
             event.setCancelled(true);
@@ -370,6 +426,11 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     private void onPistonRetract(BlockPistonRetractEvent event) {
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(event.getBlock().getWorld().getUID())) {
+            return;
+        }
+
         try {
             plugin.getBlockDatabase().removeBlocks(mapToLocations(event.getBlocks()));
         } catch (ExecutionException e) {
@@ -379,6 +440,11 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     private void onPistonExtend(BlockPistonExtendEvent event) {
+        // Skip if world is not protected
+        if (!enabledWorldIds.contains(event.getBlock().getWorld().getUID())) {
+            return;
+        }
+
         try {
             plugin.getBlockDatabase().removeBlocks(mapToLocations(event.getBlocks()));
         } catch (ExecutionException e) {

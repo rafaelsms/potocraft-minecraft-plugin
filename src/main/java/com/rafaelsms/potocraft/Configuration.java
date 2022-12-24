@@ -46,4 +46,9 @@ public class Configuration {
     public List<String> getProtectedMaterialList() {
         return (List<String>) Objects.requireNonNull(configuration.getList("protection.protected_blocks"));
     }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getProtectedWorldList() {
+        return (List<String>) Objects.requireNonNull(configuration.getList("protection.protected_worlds"));
+    }
 }
