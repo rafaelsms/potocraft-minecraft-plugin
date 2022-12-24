@@ -51,4 +51,9 @@ public class Configuration {
     public List<String> getProtectedWorldList() {
         return (List<String>) Objects.requireNonNull(configuration.getList("protection.protected_worlds"));
     }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getBlockedCommands() {
+        return (List<String>) Objects.requireNonNull(configuration.getList("combat.blocked_commands"));
+    }
 }

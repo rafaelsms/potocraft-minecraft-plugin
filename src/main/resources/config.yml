@@ -4,6 +4,16 @@ sql:
   jdbcUrl: 'jdbc:mariadb://127.0.0.1:3306/blockprotection?useSSL=false'
   driverClassName: 'org.mariadb.jdbc.Driver'
   poolSize: 10
+combat:
+  blocked_commands:
+    - tp
+    - tphere
+    - warp
+    - spawn
+    - tpaccept
+    - tpcancel
+    - enderchest
+    - suicide
 protection:
   protected_worlds:
     - world

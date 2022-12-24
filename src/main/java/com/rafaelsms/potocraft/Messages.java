@@ -109,6 +109,10 @@ public class Messages {
         return parse("<red>Você está em combate!");
     }
 
+    public Component getCommandCombatMessage() {
+        return parse("<red>Você está em combate e não pode executar este comando!");
+    }
+
     private static <T> T getOr(T t, T fallback) {
         return Objects.requireNonNullElse(t, fallback);
     }

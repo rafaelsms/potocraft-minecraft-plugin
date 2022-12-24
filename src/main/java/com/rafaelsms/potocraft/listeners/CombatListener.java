@@ -3,6 +3,7 @@ package com.rafaelsms.potocraft.listeners;
 import com.rafaelsms.potocraft.PotoCraftPlugin;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -11,10 +12,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -46,24 +50,28 @@ public class CombatListener implements Listener {
         causeCombatMap.put(EntityDamageEvent.DamageCause.PROJECTILE, CombatType.PLAYER_VERSUS_ENTITY);
         causeCombatMap.put(EntityDamageEvent.DamageCause.SONIC_BOOM, CombatType.PLAYER_VERSUS_ENTITY);
 
-        // This will not show boss bar at all
+        // This will not show boss bar at all (won't block commands)
         causeCombatMap.remove(EntityDamageEvent.DamageCause.CUSTOM);
         causeCombatMap.remove(EntityDamageEvent.DamageCause.FALL);
-        causeCombatMap.remove(EntityDamageEvent.DamageCause.DROWNING);
-        causeCombatMap.remove(EntityDamageEvent.DamageCause.SUFFOCATION);
         causeCombatMap.remove(EntityDamageEvent.DamageCause.DRYOUT);
         causeCombatMap.remove(EntityDamageEvent.DamageCause.SUICIDE);
         causeCombatMap.remove(EntityDamageEvent.DamageCause.FLY_INTO_WALL);
-        causeCombatMap.remove(EntityDamageEvent.DamageCause.CONTACT);
 
         CAUSE_COMBAT_TYPE_MAP = Collections.unmodifiableMap(causeCombatMap);
     }
 
     private final Map<UUID, CombatEntry> combatEntries = new HashMap<>();
+    private final Set<String> blockedCommands;
     private final PotoCraftPlugin plugin;
 
     public CombatListener(PotoCraftPlugin plugin) {
         this.plugin = plugin;
+
+        Set<String> blockedCommandSet = new HashSet<>();
+        for (String command : plugin.getConfiguration().getBlockedCommands()) {
+            blockedCommandSet.add(command.toLowerCase());
+        }
+        this.blockedCommands = Collections.unmodifiableSet(blockedCommandSet);
 
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::tickCombatEntries, 1, 1);
     }
@@ -79,6 +87,53 @@ public class CombatListener implements Listener {
                 iterator.remove();
             }
         }
+    }
+
+    @EventHandler
+    private void onPlayerCommand(PlayerCommandPreprocessEvent event) {
+        // Do not remove from the map because we need it on death event below
+        CombatEntry combatEntry = this.combatEntries.get(event.getPlayer().getUniqueId());
+
+        // Ignore if no combat
+        if (combatEntry == null || combatEntry.hasFinished()) {
+            return;
+        }
+
+        // Get command from message
+        String[] args = event.getMessage().toLowerCase().split(" ");
+        if (args.length <= 0) {
+            return;
+        }
+
+        String command = args[0].replaceFirst("/", "");
+
+        // Block command directly
+        if (blockedCommands.contains(command)) {
+            event.getPlayer().sendMessage(plugin.getMessages().getCommandCombatMessage());
+            event.setCancelled(true);
+            return;
+        }
+
+        PluginCommand pluginCommand = plugin.getServer().getPluginCommand(command);
+        if (pluginCommand == null) {
+            plugin.logger().warn("Could not check command for combat: {}", command);
+            return;
+        }
+
+        // Check for its aliases
+        for (String alias : pluginCommand.getAliases()) {
+            if (alias.equalsIgnoreCase(command)) {
+                event.getPlayer().sendMessage(plugin.getMessages().getCommandCombatMessage());
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    @EventHandler
+    private void onPlayerJoin(PlayerJoinEvent event) {
+        // Assure there is no combat for player
+        this.combatEntries.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(ignoreCancelled = true)
