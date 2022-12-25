@@ -303,6 +303,11 @@ public class BlocksListener implements Listener {
             return;
         }
 
+        // Skip water
+        if (event.getBlock().getType() == Material.WATER) {
+            return;
+        }
+
         handleBlockAttempt(null, event.getBlock().getLocation(), event, AttemptType.NATURAL);
     }
 
