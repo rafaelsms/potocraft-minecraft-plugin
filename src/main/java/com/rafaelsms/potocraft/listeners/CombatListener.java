@@ -189,8 +189,13 @@ public class CombatListener implements Listener {
         event.getDrops().clear();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     private void onPlayerDamagedByEntity(EntityDamageByEntityEvent event) {
+        // Ignore non-damage
+        if (event.getFinalDamage() <= 0.0) {
+            return;
+        }
+
         // Skip if damaged entity is not player
         if (!(event.getEntity() instanceof Player damaged)) {
             return;
@@ -220,8 +225,13 @@ public class CombatListener implements Listener {
         setOnCombat(damager, CombatType.PLAYER_VERSUS_PLAYER);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     private void onPlayerDamaged(EntityDamageEvent event) {
+        // Ignore non-damage
+        if (event.getFinalDamage() <= 0.0) {
+            return;
+        }
+
         // Skip if damaged entity is not player
         if (!(event.getEntity() instanceof Player damaged)) {
             return;
