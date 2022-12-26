@@ -14,6 +14,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
@@ -43,6 +44,8 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 public class BlocksListener implements Listener {
+
+    private static final boolean ALLOW_UNSECURE_END_CRYSTAL = true;
 
     private static final Set<EntityType> IGNORED_ENTITIES =
         Set.of(EntityType.BEE, EntityType.TURTLE, EntityType.VILLAGER, EntityType.FALLING_BLOCK);
@@ -244,6 +247,10 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     private void onEndCrystalInteract(PlayerInteractEvent event) {
+        if (ALLOW_UNSECURE_END_CRYSTAL) {
+            return;
+        }
+
         Location location = event.getInteractionPoint();
         ItemStack item = event.getItem();
         if (item == null || location == null || item.getType() != Material.END_CRYSTAL) {
@@ -318,6 +325,32 @@ public class BlocksListener implements Listener {
             return;
         }
 
+        if (block.getState() instanceof InventoryHolder) {
+            handleBlockInteract(event);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    private void onSoilInteract(PlayerInteractEvent event) {
+        // Get block being trampled
+        if (event.getAction() != Action.PHYSICAL) {
+            return;
+        }
+        Block block = event.getClickedBlock();
+        if (block == null || block.getType() != Material.FARMLAND) {
+            return;
+        }
+
+        handleBlockInteract(event);
+    }
+
+    private void handleBlockInteract(PlayerInteractEvent event) {
+        // Ignore if not handling blocks
+        Block block = event.getClickedBlock();
+        if (block == null) {
+            return;
+        }
+
         // Skip if world is not protected
         if (!enabledWorldIds.contains(block.getWorld().getUID())) {
             return;
@@ -328,20 +361,19 @@ public class BlocksListener implements Listener {
             return;
         }
 
-        if (block.getState() instanceof InventoryHolder) {
-            Player player = event.getPlayer();
-            try {
-                Optional<UUID> blockOwner =
-                    plugin.getBlockDatabase().getBlockOwnerToRead(player.getUniqueId(), block.getLocation());
+        // Check player permissions
+        Player player = event.getPlayer();
+        try {
+            Optional<UUID> blockOwner =
+                plugin.getBlockDatabase().getBlockOwnerToRead(player.getUniqueId(), block.getLocation());
 
-                if (blockOwner.isPresent()) {
-                    player.sendActionBar(plugin.getMessages().getBlockNearbyHasOwner(blockOwner.get()));
-                    event.setUseInteractedBlock(Event.Result.DENY);
-                }
-            } catch (ExecutionException e) {
-                player.sendActionBar(plugin.getMessages().getDatabaseAccessError());
+            if (blockOwner.isPresent()) {
+                player.sendActionBar(plugin.getMessages().getBlockNearbyHasOwner(blockOwner.get()));
                 event.setUseInteractedBlock(Event.Result.DENY);
             }
+        } catch (ExecutionException e) {
+            player.sendActionBar(plugin.getMessages().getDatabaseAccessError());
+            event.setUseInteractedBlock(Event.Result.DENY);
         }
     }
 
