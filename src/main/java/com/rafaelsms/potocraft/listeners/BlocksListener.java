@@ -26,6 +26,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketEntityEvent;
@@ -89,6 +90,8 @@ public class BlocksListener implements Listener {
                 plugin.logger().warn("Failed to parse protected material name: {}", materialName);
             }
         }
+        // Prevent TNT from being in the list
+        materialSet.remove(Material.TNT);
         this.protectedMaterials = Collections.unmodifiableSet(materialSet);
     }
 
@@ -191,32 +194,44 @@ public class BlocksListener implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    private void onBlockExplodeAttempt(BlockExplodeEvent event) {
-        // Ignore explosions (do not destroy blocks)
-        event.blockList().clear();
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    private void onEntityExplode(EntityExplodeEvent event) {
+        handleExplosion(event.getLocation().getWorld(), event.blockList(), event);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     private void onBlockExplode(BlockExplodeEvent event) {
+        handleExplosion(event.getBlock().getWorld(), event.blockList(), event);
+    }
+
+    private void handleExplosion(World world, List<Block> blockList, Cancellable cancellable) {
         // Skip if world is not protected
-        if (!enabledWorldIds.contains(event.getBlock().getWorld().getUID())) {
+        if (!enabledWorldIds.contains(world.getUID())) {
             return;
         }
 
-        if (event.blockList().isEmpty()) {
+        if (blockList.isEmpty()) {
             return;
         }
 
         try {
-            plugin.getBlockDatabase().removeBlocks(mapToLocations(event.blockList()));
+            plugin.getBlockDatabase().removeBlocks(mapToLocations(blockList));
         } catch (ExecutionException e) {
-            event.setCancelled(true);
+            cancellable.setCancelled(true);
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     private void onBlockPlaceAttempt(BlockPlaceEvent event) {
+        // Allow TNT and fire on TNT to be placed anywhere
+        if (event.getBlockPlaced().getType() == Material.TNT) {
+            return;
+        }
+        if (event.getBlockPlaced().getType() == Material.FIRE && event.getBlockAgainst().getType() == Material.TNT) {
+            return;
+        }
+
+        // Otherwise, handle protection
         handleBlockAttempt(event.getPlayer(), event.getBlock().getLocation(), event, AttemptType.WRITE);
     }
 
