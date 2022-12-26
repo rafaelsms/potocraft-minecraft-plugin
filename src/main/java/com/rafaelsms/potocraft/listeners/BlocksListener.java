@@ -9,6 +9,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -49,6 +50,9 @@ public class BlocksListener implements Listener {
 
     private static final Set<EntityType> IGNORED_ENTITIES =
         Set.of(EntityType.BEE, EntityType.TURTLE, EntityType.VILLAGER, EntityType.FALLING_BLOCK);
+    private static final Set<EntityType> PROTECTED_ENTITIES =
+        Set.of(EntityType.HORSE, EntityType.VILLAGER, EntityType.GLOW_ITEM_FRAME, EntityType.ITEM_FRAME,
+            EntityType.ALLAY, EntityType.PAINTING);
     private static final Set<Material> INVALID_PISTON_MATERIALS =
         Set.of(Material.PISTON, Material.PISTON_HEAD, Material.MOVING_PISTON, Material.STICKY_PISTON);
 
@@ -379,11 +383,30 @@ public class BlocksListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     private void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) {
+        // Ignore non-player damager (but include ender crystal)
+        Player damager;
+        if (event.getDamager() instanceof Player player) {
+            damager = player;
+        } else if (event.getDamager() instanceof Projectile projectile && projectile.getShooter() != null &&
+                       projectile.getShooter() instanceof Player player) {
+            damager = player;
+        } else if (event.getEntityType() == EntityType.ENDER_CRYSTAL) {
+            damager = null;
+        } else {
             return;
         }
 
-        handleBlockAttempt(player, event.getEntity().getLocation(), event, AttemptType.READ);
+        // Ignore Player versus Player combat
+        if (event.getEntity() instanceof Player) {
+            return;
+        }
+
+        // Ignore unprotected entities that are not named
+        if (!PROTECTED_ENTITIES.contains(event.getEntityType()) && event.getEntity().customName() != null) {
+            return;
+        }
+
+        handleBlockAttempt(damager, event.getEntity().getLocation(), event, AttemptType.READ);
     }
 
     @EventHandler(ignoreCancelled = true)
