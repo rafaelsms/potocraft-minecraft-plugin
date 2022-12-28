@@ -11,8 +11,8 @@ import org.bukkit.event.world.WorldLoadEvent;
 
 public class WorldsListener implements Listener {
 
-    private static final double BORDER_MAX_COORDINATE = 5_000.0;
-    private static final int BORDER_WARNING_DISTANCE = 100;
+    private static final double BORDER_MAX_COORDINATE = 7_500.0;
+    private static final int BORDER_WARNING_DISTANCE = 300;
 
     private final PotoCraftPlugin plugin;
 
@@ -41,7 +41,7 @@ public class WorldsListener implements Listener {
     }
 
     private static void setWorldGameRules(World world) {
-        world.setGameRule(GameRule.SPAWN_RADIUS, 100);
+        world.setGameRule(GameRule.SPAWN_RADIUS, 0);
         world.setGameRule(GameRule.PLAYERS_SLEEPING_PERCENTAGE, 40);
         world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false);
     }
