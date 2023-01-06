@@ -47,6 +47,6 @@ public class WorldsListener implements Listener {
     }
 
     private static void setWorldDifficulty(World world) {
-        world.setDifficulty(Difficulty.EASY);
+        world.setDifficulty(Difficulty.HARD);
     }
 }
